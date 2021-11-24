@@ -77,12 +77,13 @@ bool Is_Game_Over()
 
 int main()
 {
+	std::srand(time(NULL));
+
 	gh:
 	Draw_Start_Field();
 
 	player->Spawn(PLAYER_COORDINATIONS_X, PLAYER_COORDINATIONS_Y);//координаты игрока
 
-	std::srand(time(NULL));
 
 	while (Is_Game_Over() == false)
 	{
@@ -197,12 +198,11 @@ void Player::Shoot()
 	std::thread sb(&Projectile::Projectile_Spawn, new_projectile, player_coordinates + gun_relative_coordinates);
 	
 	sb.join();
-	sb.~thread();
 }
 
 void Player::Move()
 {
-	if (isGameOver == false)
+	if (Is_Game_Over() == false)
 	{
 		char input = _getch();
 		char input_array[4] = { 'w','a','s','d' };
@@ -236,7 +236,7 @@ void Player::Move()
 
 void Enemy::Enemy_Move()
 {
-	if(isGameOver == false)
+	if(Is_Game_Over() == false)
 	if (Enemy_Is_Collide() || Enemy_Is_End_Field())
 	{
 		for (int j = 0; j < 3; j++)
@@ -283,7 +283,8 @@ bool Enemy::Enemy_Is_Collide()
 			}
 			else
 			{
-				if (main_field[enemy_coordinates.Y + j][enemy_coordinates.X - 1] == '@')
+				if (main_field[enemy_coordinates.Y + j][enemy_coordinates.X - 1] == '@' ||
+					main_field[enemy_coordinates.Y + j][enemy_coordinates.X] == '@')
 				{
 					if (g_Life > 0)
 						g_Life--;
