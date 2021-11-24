@@ -5,6 +5,10 @@
 #define WIDTH 70
 #define HEIGHT 20
 #define DEFDELAY 100
+#define STARTLIFE 5
+
+
+int g_Life = STARTLIFE;
 
 struct Vector2
 {

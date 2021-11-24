@@ -16,40 +16,35 @@
 #include <list>
 #include <time.h>
 
+#define PLAYER_COORDINATIONS_X 4
+#define PLAYER_COORDINATIONS_Y 13
+
 Player* player;
 
-std::list<Projectile*> projectiles;
+
 std::vector<std::vector<char>> main_field;
+
 Vector2 player_coordinates;
+
 Vector2 gun_relative_coordinates = Vector2(3, 1);
+
 std::queue<Projectile> projectile_queue;
 
 std::mutex mtx;
 
-static int moveX[] = { 0, 0, 0, 1, 1, 1, -1, -1, -1 };
-static int moveY[] = { 0, 1, -1, 0, 1, -1, 1, 0, -1 };
-Vector2 moveVec[8];
-static int check_collide[] = { 0, 1, -1 };
 
-int count = 0;
 int Life = 5;
 
-
 bool isGameOver = false;
+
 void Draw_Start_Field()
 {
 	player = new Player();
-
-	for (int i = 0; i < 8; i++)
-	{
-		moveVec[i] = Vector2(moveX[i], moveY[i]);
-	}
 
 	main_field.resize(HEIGHT);
 
 	for (int i = 0; i < HEIGHT; i++)
 	{
-
 		for (int j = 0; j < WIDTH; j++)
 		{
 			if (i == 0 || i == HEIGHT - 1)
@@ -74,27 +69,26 @@ void Re_Draw_Field()
 		printf("\n");
 	}
 	printf("\n");
-	printf("Lives: %d\n", Life);
+	printf("Lives: %d\n", g_Life);
 	mtx.unlock();
+}
+
+bool Is_Game_Over()
+{
+	return isGameOver;
 }
 
 int main()
 {
-
 	gh:
 	Draw_Start_Field();
 
-	//std::thread player_thread(&Player::Spawn, player,4,13);
-	//player_thread.detach();
-	player->Spawn(4, 13);
+	player->Spawn(PLAYER_COORDINATIONS_X, PLAYER_COORDINATIONS_Y);//координаты игрока
+
 	std::srand(time(NULL));
-	while (isGameOver == false)
+
+	while (Is_Game_Over() == false)
 	{
-
-	
-	//while (isGameOver == false)
-	//{
-
 		Enemy* enemy = new Enemy();
 		int yEnemyCoord = std::rand() % HEIGHT;
 		if (yEnemyCoord == 0)
@@ -103,38 +97,28 @@ int main()
 		}
 		else
 		{
-			if (yEnemyCoord == HEIGHT - 1 || yEnemyCoord == HEIGHT - 2 || yEnemyCoord == HEIGHT - 3)
+			if (yEnemyCoord == HEIGHT - 1 || yEnemyCoord == HEIGHT - 2 || yEnemyCoord == HEIGHT - 3)//добавляем врагу нужные координаты
 			{
 				yEnemyCoord = HEIGHT - 4;
 			}
 		}
-
-		//std::thread enemy_thread(&Enemy::Enemy_Spawn, enemy, Vector2(WIDTH - 4, yEnemyCoord));
-		//enemy_thread.detach();
 		enemy->Enemy_Spawn(Vector2(WIDTH - 4, yEnemyCoord));
-		std::this_thread::sleep_for(std::chrono::milliseconds(10000));
-
-	//	
-
-		//std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+		std::this_thread::sleep_for(std::chrono::milliseconds(10000));//задержка спавна противника
 	}
 	
 	printf("\n ====== GameOver ======\n");
 	printf("try retry press 1");
-	int f;
-	scanf_s("%d", &f);
 
-	//delete player;
-
-	if (f == 1)
+	char f = _getch();
+	 
+	if (f == '1')
 	{
-		Life = 0;
+		g_Life = STARTLIFE;
 		isGameOver = false;
 		main_field.clear();
-		goto gh;
+		goto gh;//restart game
 	}
-	//enemy->Enemy_Spawn(Vector2(67, 13));
-	//playerThread.join();
+
 	exit(0);
 	return 0;
 }
@@ -143,12 +127,7 @@ void Projectile::Projectile_Spawn(Vector2 spawn_coordinates)
 {
 	main_field[spawn_coordinates.Y][spawn_coordinates.X] = bullet;
 	coordinates = spawn_coordinates;
-	//std::thread a(&Projectile::Projectile_Move, this);
-	//std::this_thread::sleep_for(std::chrono::milliseconds(100));
-	//Sleep(DEFDELAY);
 	Projectile_Move();
-	
-	//a.join();
 }
 
 
@@ -171,15 +150,18 @@ void Projectile::Projectile_Move()
 			Re_Draw_Field();
 
 			delete this;
+
 			player->Shoot();
 		}
 		else
 		{
 			main_field[coordinates.Y + move_vector.Y][coordinates.X + move_vector.X] = bullet;
+
 			main_field[coordinates.Y][coordinates.X] = ' ';
+
 			coordinates.Y += move_vector.Y;
 			coordinates.X += move_vector.X;
-			//std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
 			Re_Draw_Field();
 			Projectile_Move();
 		}
@@ -193,33 +175,26 @@ void Player::Spawn(int x, int y)
 
 	for (int i = 0; i < 3; i++)
 		for (int j = 0; j < 3; j++)
-			main_field[y + i][x + j] = player_ship[i][j];
+			main_field[y + i][x + j] = player_ship[i][j];//добавляем на поле корабль игрока
 
 	player_coordinates = Vector2(x, y);
 
 	Re_Draw_Field();
+
 	std::thread playerThread(&Player::Shoot, player);
-	//Shoot();
 	playerThread.detach();
+
 	std::thread player_Thread(&Player::Move, player);
 	player_Thread.detach();
-	//Move();
 	
 }
 
 
 void Player::Shoot()
 {
-
 	Projectile* new_projectile = new Projectile();
-	//projectiles.push_back(new_projectile);
 	std::thread sb(&Projectile::Projectile_Spawn, new_projectile, player_coordinates + gun_relative_coordinates);
-	//new_projectile->Projectile_Spawn(player_coordinates + gun_relative_coordinates);
-	//Re_Draw_Field();
-
-
 	sb.join();
-
 }
 
 void Player::Move()
@@ -227,37 +202,29 @@ void Player::Move()
 	if (isGameOver == false)
 	{
 		char input = _getch();
-		char arr[4] = { 'w','a','s','d' };
-		Vector2 arr2[4] = { Vector2(0,-1), Vector2(-1,0), Vector2(0,1), Vector2(1,0) };
+		char input_array[4] = { 'w','a','s','d' };
+		Vector2 move_array[4] = { Vector2(0,-1), Vector2(-1,0), Vector2(0,1), Vector2(1,0) };
 		for (int i = 0; i < 4; i++)
 		{
-			if (input == arr[i])
+			if (input == input_array[i])
 			{
-				Vector2 Next = player_coordinates + arr2[i];
-				if (Next.X >= 0 && Next.X < WIDTH - 2 && main_field[Next.Y][Next.X] != '-' && main_field[Next.Y + 2][Next.X] != '-')
+				Vector2 Next = player_coordinates + move_array[i];
+				if (Next.X >= 0 && Next.X < WIDTH - 2 && main_field[Next.Y][Next.X] != '-' && main_field[Next.Y + 2][Next.X] != '-')//проверяем на выход за границы поля
 				{
-
 					for (int g = 0; g < 3; g++)
-						for (int k = 0; k < 3; k++)
-						{
+						for (int k = 0; k < 3; k++)//очищаем поле от игрока
 							main_field[player_coordinates.Y + g][player_coordinates.X + k] = ' ';
-						}
 
-					player_coordinates.X += arr2[i].X;
-					player_coordinates.Y += arr2[i].Y;
+					player_coordinates.X += move_array[i].X;
+					player_coordinates.Y += move_array[i].Y;
 
 					for (int g = 0; g < 3; g++)
-						for (int k = 0; k < 3; k++)
-						{
+						for (int k = 0; k < 3; k++)//добавляем на поле игрока
 							main_field[Next.Y + g][Next.X + k] = player_ship[g][k];
-						}
 				}
 			}
 		}
 
-
-
-		//Re_Draw_Field();
 
 		Move();
 	}
@@ -271,9 +238,7 @@ void Enemy::Enemy_Move()
 	{
 		for (int j = 0; j < 3; j++)
 			for (int k = 0; k < 3; k++)
-				main_field[enemy_coordinates.Y + j][enemy_coordinates.X + k] = ' ';
-
-		//Re_Draw_Field();
+				main_field[enemy_coordinates.Y + j][enemy_coordinates.X + k] = ' ';//удаляем врага с поля
 
 		delete this;
 	}
@@ -292,7 +257,6 @@ void Enemy::Enemy_Move()
 
 		std::this_thread::sleep_for(std::chrono::milliseconds(200));
 
-		//Re_Draw_Field();
 		Enemy_Move();
 
 	}
@@ -318,8 +282,8 @@ bool Enemy::Enemy_Is_Collide()
 			{
 				if (main_field[enemy_coordinates.Y + j][enemy_coordinates.X - 1] == '@')
 				{
-					if (Life > 0)
-						Life--;
+					if (g_Life > 0)
+						g_Life--;
 					else
 					{
 						isGameOver = true;
