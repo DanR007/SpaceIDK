@@ -32,7 +32,7 @@ Vector2 moveVec[8];
 static int check_collide[] = { 0, 1, -1 };
 
 int count = 0;
-int Life = 0;
+int Life = 5;
 
 
 bool isGameOver = false;
@@ -179,7 +179,7 @@ void Projectile::Projectile_Move()
 			main_field[coordinates.Y][coordinates.X] = ' ';
 			coordinates.Y += move_vector.Y;
 			coordinates.X += move_vector.X;
-			std::this_thread::sleep_for(std::chrono::milliseconds(100));
+			//std::this_thread::sleep_for(std::chrono::milliseconds(100));
 			Re_Draw_Field();
 			Projectile_Move();
 		}
@@ -211,15 +211,15 @@ void Player::Spawn(int x, int y)
 void Player::Shoot()
 {
 
-		Projectile* new_projectile = new Projectile();
-		//projectiles.push_back(new_projectile);
-		std::thread sb(&Projectile::Projectile_Spawn, new_projectile, player_coordinates + gun_relative_coordinates);
-		//new_projectile->Projectile_Spawn(player_coordinates + gun_relative_coordinates);
-		//Re_Draw_Field();
-		
-	
+	Projectile* new_projectile = new Projectile();
+	//projectiles.push_back(new_projectile);
+	std::thread sb(&Projectile::Projectile_Spawn, new_projectile, player_coordinates + gun_relative_coordinates);
+	//new_projectile->Projectile_Spawn(player_coordinates + gun_relative_coordinates);
+	//Re_Draw_Field();
+
+
 	sb.join();
-	
+
 }
 
 void Player::Move()
@@ -309,14 +309,14 @@ bool Enemy::Enemy_Is_Collide()
 	for (int i = 0; i < 3; i++)
 		for (int j = 0; j < 3; j++)
 		{
-			if (main_field[enemy_coordinates.Y + check_collide[i] + j][enemy_coordinates.X - 1] == '*' ||
-				main_field[enemy_coordinates.Y + check_collide[i] + j][enemy_coordinates.X] == '*')
+			if (main_field[enemy_coordinates.Y + j][enemy_coordinates.X - 1] == '*' ||
+				main_field[enemy_coordinates.Y + j][enemy_coordinates.X] == '*')
 			{
 				return true;
 			}
 			else
 			{
-				if (main_field[enemy_coordinates.Y + check_collide[i] + j][enemy_coordinates.X - 1] == '@')
+				if (main_field[enemy_coordinates.Y + j][enemy_coordinates.X - 1] == '@')
 				{
 					if (Life > 0)
 						Life--;
