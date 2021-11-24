@@ -20,7 +20,7 @@
 #define PLAYER_COORDINATIONS_Y 13
 
 Player* player;
-
+Projectile* projectile;
 
 std::vector<std::vector<char>> main_field;
 
@@ -31,9 +31,6 @@ Vector2 gun_relative_coordinates = Vector2(3, 1);
 std::queue<Projectile> projectile_queue;
 
 std::mutex mtx;
-
-
-int Life = 5;
 
 bool isGameOver = false;
 
@@ -127,6 +124,7 @@ void Projectile::Projectile_Spawn(Vector2 spawn_coordinates)
 {
 	main_field[spawn_coordinates.Y][spawn_coordinates.X] = bullet;
 	coordinates = spawn_coordinates;
+	
 	Projectile_Move();
 }
 
@@ -144,14 +142,9 @@ bool Projectile::Projectile_Is_End_Of_Field()
 void Projectile::Projectile_Move()
 {
 	if (isGameOver == false)
-		if (Projectile_Is_Collide() || Projectile_Is_End_Of_Field())
+		if (Projectile_Is_End_Of_Field())
 		{
-			main_field[coordinates.Y][coordinates.X] = ' ';
-			Re_Draw_Field();
-
-			delete this;
-
-			player->Shoot();
+			Destroy();
 		}
 		else
 		{
@@ -168,11 +161,19 @@ void Projectile::Projectile_Move()
 
 }
 
+void Projectile::Destroy()
+{
+	std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	main_field[coordinates.Y][coordinates.X] = ' ';
+	Re_Draw_Field();
 
+	delete this;
+
+	player->Shoot();
+}
 
 void Player::Spawn(int x, int y)
 {
-
 	for (int i = 0; i < 3; i++)
 		for (int j = 0; j < 3; j++)
 			main_field[y + i][x + j] = player_ship[i][j];//добавляем на поле корабль игрока
@@ -192,9 +193,11 @@ void Player::Spawn(int x, int y)
 
 void Player::Shoot()
 {
-	Projectile* new_projectile = new Projectile();
+	Projectile *new_projectile = new Projectile();
 	std::thread sb(&Projectile::Projectile_Spawn, new_projectile, player_coordinates + gun_relative_coordinates);
+	
 	sb.join();
+	sb.~thread();
 }
 
 void Player::Move()

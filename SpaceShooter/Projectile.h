@@ -1,4 +1,5 @@
 #include "Main.h"
+#include <thread>
 
 class Projectile
 {
@@ -16,4 +17,6 @@ public:
 	Vector2 coordinates;
 
 	const Vector2 move_vector = Vector2(1, 0);
+
+	void Destroy();
 };
