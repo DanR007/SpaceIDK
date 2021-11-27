@@ -18,5 +18,7 @@ public:
 
 	const Vector2 move_vector = Vector2(1, 0);
 
+	bool isCollide = false;
+
 	void Destroy();
 };
